@@ -1,4 +1,4 @@
-name: Chrome Remote with Ngrok
+name: VNC with Ngrok in Docker
 
 on:
   push:
@@ -7,70 +7,55 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-chrome-remote:
+  setup-vnc:
     runs-on: ubuntu-latest
+
     steps:
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Chrome
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-          google-chrome --version
+      # Set up Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
 
-      - name: Install VNC Server
+      # Run Docker container with VNC
+      - name: Run Docker container with VNC
         run: |
-          sudo apt-get install -y tightvncserver xfce4 xfce4-terminal
-          mkdir -p ~/.vnc
-          echo "password" | vncpasswd -f > ~/.vnc/passwd
-          chmod 600 ~/.vnc/passwd
-          # Configure VNC startup
-          echo '#!/bin/bash' > ~/.vnc/xstartup
-          echo 'startxfce4 &' >> ~/.vnc/xstartup
-          chmod +x ~/.vnc/xstartup
-          # Start VNC server
-          vncserver :1 -geometry 1280x800 -depth 24
+          docker run -d -p 5901:5901 --name vnc-container consol/ubuntu-xfce-vnc:latest
+          echo "Docker container started with VNC"
+
+      # Start VNC server inside Docker container
+      - name: Start VNC server in Docker container
+        run: |
+          docker exec vnc-container bash -c "vncserver :1 -geometry 1280x800 -depth 24"
           echo "VNC server started on port 5901"
 
-      - name: Start Chrome in Debug Mode
-        run: |
-          # Start Chrome in headless debug mode
-          google-chrome --headless --disable-gpu --remote-debugging-port=9222 --no-sandbox &
-          echo "Chrome started in debug mode on port 9222"
-
+      # Install Ngrok
       - name: Install ngrok
         run: |
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      - name: Start ngrok tunnels
+      # Start ngrok tunnel for VNC
+      - name: Start ngrok tunnel for VNC
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           ngrok authtoken $NGROK_AUTH_TOKEN
-          # Start ngrok for Chrome debug port
-          ngrok http 9222 --log=stdout > ngrok_chrome.log &
-          # Start ngrok for VNC port
+          # Start ngrok for VNC port only (5901)
           ngrok tcp 5901 --log=stdout > ngrok_vnc.log &
           sleep 5
-          CHROME_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok_chrome.log | head -n 1)
           VNC_URL=$(grep -o 'tcp://.*\.ngrok-free\.app:[0-9]*' ngrok_vnc.log | head -n 1)
-          echo "::notice::Chrome remote is available at: $CHROME_URL"
           echo "::notice::VNC remote is available at: $VNC_URL (Password: password)"
-          echo "CHROME_URL=$CHROME_URL" >> $GITHUB_ENV
           echo "VNC_URL=$VNC_URL" >> $GITHUB_ENV
 
+      # Create connection instruction file
       - name: Create connection instruction file
         run: |
           cat << EOF > connection_instructions.txt
-          Chrome Remote Debug URL: $CHROME_URL
           VNC Server: $VNC_URL (Password: password)
-
-          To connect to Chrome remote debugging:
-          1. Open your local browser and navigate to $CHROME_URL
-          2. Click on any of the available targets to inspect
 
           To connect to the VNC server:
           1. Use any VNC client (like VNC Viewer, RealVNC, TigerVNC)
@@ -82,6 +67,7 @@ jobs:
 
           cat connection_instructions.txt
 
+      # Keep ngrok session alive
       - name: Keep ngrok session alive
         run: |
-          tail -f ngrok_chrome.log
+          tail -f ngrok_vnc.log
