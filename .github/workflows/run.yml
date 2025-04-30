@@ -82,11 +82,6 @@ jobs:
 
           cat connection_instructions.txt
 
-      - name: Keep alive
-        env:
-          SESSION_DURATION: 3
+      - name: Keep ngrok session alive
         run: |
-          session_duration=$SESSION_DURATION
-          duration_seconds=$((session_duration * 3600))
-          echo "Keeping session alive for $session_duration hour(s)"
-          sleep $duration_seconds
+          tail -f ngrok_chrome.log
