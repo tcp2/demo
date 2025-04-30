@@ -1,21 +1,10 @@
-FROM --platform=linux/amd64 mcr.microsoft.com/playwright:v1.44.1-jammy 
+FROM consol/ubuntu-xfce-vnc
 
-ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y wget gnupg && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo 'deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && \
+    apt-get install -y google-chrome-stable
 
-RUN apt-get update
-RUN apt-get install -y x11vnc xvfb
-RUN apt-get -y clean;
-RUN mkdir ~/.vnc
-RUN x11vnc --version
-
-WORKDIR /app
-RUN npm i -g pnpm
-COPY package.json ./
-RUN pnpm install -P
-COPY . ./
-
-RUN x11vnc -storepasswd secretpassword ~/.vnc/passwd 
-CMD xvfb-run --server-num 1 --auth-file /tmp/xvfb1.auth pnpm start & \
-  x11vnc -usepw -display WAIT:1 -forever -auth /tmp/xvfb1.auth
-
-EXPOSE 5900
+CMD ["google-chrome", "--no-sandbox", "--disable-dev-shm-usage"]

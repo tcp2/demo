@@ -18,12 +18,10 @@ jobs:
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      - name: Run Chrome + noVNC container
-        run: |
-          docker run -d \
-            --name vnc-chrome \
-            -p 6080:80 \
-            dorowu/ubuntu-desktop-lxde-vnc
+      - name: Build custom Chrome image
+        run: docker build -t chrome-remote .
+      - name: Run VNC container
+        run: docker run -d --name vnc-chrome -p 6080:80 chrome-remote
 
       - name: Start ngrok tunnel for VNC
         env:
