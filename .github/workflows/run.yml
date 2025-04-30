@@ -11,23 +11,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      # Set up Docker
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-
-      # Run Docker container with Chrome and VNC
-      - name: Run Docker container with Chrome and VNC
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v2
+      - name: Start Chrome with noVNC
         run: |
-          docker run -d -p 5901:5900 -p 6080:6080 --name browser-container --shm-size=2g -e RESOLUTION=1280x720x24 nkpro/chrome-vnc
-          # Verify container is running
-          sleep 15
-          docker ps | grep browser-container
-          echo "Docker container with Chrome browser and VNC started"
-          echo "VNC service is available on port 5901"
+          docker run -d \
+            -p 5980:5980 \
+            -e RESOLUTION=1280x720x24 \
+            --name browser \
+            nkpro/chrome-novnc
+          sleep 8
 
       # Install Ngrok
       - name: Install ngrok
@@ -41,40 +34,19 @@ jobs:
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
+          run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install -y ngrok jq
           ngrok authtoken $NGROK_AUTH_TOKEN
-          # Start ngrok for VNC port (5901)
-          ngrok tcp 5901 --log=stdout > ngrok_vnc.log &
-          # Start ngrok for noVNC web access (6080)
-          ngrok http 6080 --log=stdout > ngrok_novnc.log &
-          sleep 5
-          VNC_URL=$(grep -o 'tcp://.*\.ngrok-free\.app:[0-9]*' ngrok_vnc.log | head -n 1)
-          WEB_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok_novnc.log | head -n 1)
-          echo "::notice::VNC remote is available at: $VNC_URL (Password: password)"
-          echo "::notice::Browser access available at: $WEB_URL"
-          echo "VNC_URL=$VNC_URL" >> $GITHUB_ENV
-          echo "WEB_URL=$WEB_URL" >> $GITHUB_ENV
+          ngrok http 5980 --log=stdout > ngrok.log &
 
       # Create connection instruction file
-      - name: Create connection instruction file
+      - name: Wait and show access URL
         run: |
-          cat << EOF > connection_instructions.txt
-          Remote Browser Control Access:
-          
-          METHOD 1 - Web Browser (Recommended):
-          1. Open your web browser and navigate to: $WEB_URL
-          2. No password needed for web access
-          
-          METHOD 2 - VNC Client:
-          1. Use any VNC client (like VNC Viewer, RealVNC, TigerVNC)
-          2. Connect to the address: $VNC_URL
-          3. Enter password: password
-          
-          Once connected, you can use Firefox browser inside the remote environment.
-          EOF
+          sleep 10
+          curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' > url.txt
+          echo "::notice::🌐 Access Chrome via noVNC at: $(cat url.txt)"
 
-          cat connection_instructions.txt
-
-      # Keep ngrok session alive
-      - name: Keep ngrok session alive
-        run: |
-          tail -f ngrok_vnc.log ngrok_novnc.log
+      - name: Keep session alive
+        run: tail -f ngrok.log
