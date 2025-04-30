@@ -15,7 +15,7 @@
       "label": "real vnc"
     }
   },
-  "postCreateCommand": "npm ci",
+  "postCreateCommand": "",
   "customizations": {
     "vscode": {
       "extensions": ["ms-playwright.playwright"]

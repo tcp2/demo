@@ -21,26 +21,9 @@ jobs:
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      
       - name: Run Playwright in devcontainer
         uses: devcontainers/ci@v0.3
-        with:
-          runCmd: |
-            # Cài đặt dependencies
-            npm ci
-            
-            # Chạy test với Playwright với VNC được bật
-            npm test &
-            
-            # Đợi VNC server khởi động
-            sleep 10
-            
-            # Hiển thị thông tin về container
-            echo "Browser container is running on port 6080 (VNC)"
-            
-            # Giữ container chạy để có thể kết nối từ xa
-            # Không kết thúc job ở đây, sẽ được kiểm soát bởi bước chạy ngrok sau
-      
+        
       - name: Start ngrok tunnel for VNC
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
