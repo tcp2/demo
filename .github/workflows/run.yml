@@ -15,15 +15,12 @@ jobs:
         with:
           node-version: "20"
       
-      # Tải và cài đặt ngrok trước
-      - name: Setup ngrok
-        env:
-          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+      - name: Install ngrok
         run: |
-          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
-          tar -xzf ngrok-v3-stable-linux-amd64.tgz
-          chmod +x ./ngrok
-          ./ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok
+
       
       - name: Run Playwright in devcontainer
         uses: devcontainers/ci@v0.3
@@ -44,16 +41,29 @@ jobs:
             # Giữ container chạy để có thể kết nối từ xa
             # Không kết thúc job ở đây, sẽ được kiểm soát bởi bước chạy ngrok sau
       
-      - name: Start ngrok tunnel
+      - name: Start ngrok tunnel for VNC
+        env:
+          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          # Chạy ngrok để tạo tunnel đến port 6080 (VNC port)
-          ./ngrok http 6080 --log=stdout > ngrok.log &
-          sleep 5
-          NGROK_URL=$(grep -o 'https://.*\.ngrok\.io\|https://.*\.ngrok-free\.app' ngrok.log | head -n 1)
-          echo "Ngrok URL: $NGROK_URL"
+          ngrok authtoken $NGROK_AUTH_TOKEN
+          ngrok tcp 6080 --log=stdout > ngrok.log &
           
-          # Hiển thị URL cho người dùng
-          echo "Trình duyệt có thể truy cập tại: $NGROK_URL"
+          # Đợi ngrok khởi động
+          sleep 10
           
-          # Giữ ngrok và workflow chạy trong một khoảng thời gian
-          sleep 3600
+          # Trích xuất và hiển thị địa chỉ ngrok
+          echo "Extracting ngrok URL..."
+          grep -o "url=tcp://.*" ngrok.log | tail -n1 | cut -d'/' -f3 | tee ngrok_url.txt
+          
+          echo "========== NGROK PUBLIC URL =========="
+          echo "VNC viewer address: $(cat ngrok_url.txt)"
+          echo "Use this address with any VNC viewer client"
+          echo "Default VNC password is 'secret'"
+          echo "======================================"
+          
+          # Giữ cho workflow chạy một thời gian để bạn có thể kết nối
+          echo "Keeping the tunnel open for 30 minutes..."
+          tail -f ngrok.log
+
+
+
