@@ -18,11 +18,11 @@ jobs:
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      - name: Build custom Chrome image
-        run: docker build -t chrome-remote .
+      # - name: Build custom Chrome image
+      #   run: docker build -t chrome-remote .
       - name: Run VNC container
-        run: docker run -d --name vnc-chrome -p 6080:80 chrome-remote
-
+        run: docker run -d --restart=unless-stopped --name=chrome-novnc -p 6080:6080 -v /data/chrome-novnc:/config -e VNC_PASSWORD=vnc_password jerryin/chrome-novnc
+      
       - name: Start ngrok tunnel for VNC
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
