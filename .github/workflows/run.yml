@@ -21,7 +21,6 @@ jobs:
 
       - name: Install Chrome Remote Desktop
         run: |
-          sudo apt-get update && apt-get upgrade --assume-yes
           wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
           sudo apt-get install -y xserver-xorg-video-dummy policykit-1 xbase-clients python3-psutil python3-xdg gsettings-desktop-schemas
           sudo dpkg -i chrome-remote-desktop_current_amd64.deb
