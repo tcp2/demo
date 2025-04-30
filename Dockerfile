@@ -36,19 +36,6 @@ RUN cd /tmp &&\
 	tar -xzf /tmp/orbita-browser.tar.gz -C /usr/bin &&\
 	rm -f /tmp/orbita-browser.tar.gz
 
-# Install Python 3 and pip
-RUN apt-get update && \
-  apt-get install -y python3 python3-pip python3-dev && \
-  ln -s /usr/bin/python3 /usr/bin/python && \
-  pip3 install --upgrade pip && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-
-  # Install noVNC
-RUN apt-get update && apt-get install -y git && \
-git clone --depth 1 https://github.com/novnc/noVNC.git /opt/novnc && \
-git clone --depth 1 https://github.com/novnc/websockify /opt/novnc/utils/websockify && \
-ln -s /opt/novnc/vnc.html /opt/novnc/index.html
 
 RUN apt-get -qq clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -57,7 +44,7 @@ RUN apt-get -qq clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 WORKDIR /opt/orbita
 
 COPY ./ /opt/orbita/
-RUN  pip install -r requirements.txt
+RUN  pip3 install -r requirements.txt
 	
 # Add the browser user (orbita)
 RUN groupadd -r orbita && useradd -r -g orbita -s/bin/bash -G audio,video,sudo -p $(echo 1 | openssl passwd -1 -stdin) orbita  \
