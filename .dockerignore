@@ -1,6 +1,8 @@
 # Build Files
 node_modules/
 build/
+.venv/
+venv/
 
 # Editor preferences
 .editorconfig
