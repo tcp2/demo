@@ -27,7 +27,16 @@ jobs:
           SCREEN_HEIGHT: 1080
           PROFILE_ID: 67eeb053a9cb6a7191579b8b
           TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk
-        run: docker run -e SCREEN_WIDTH=$SCREEN_WIDTH -e SCREEN_HEIGHT=$SCREEN_HEIGHT -e PROFILE_ID=$PROFILE_ID -e TOKEN=$TOKEN --rm -ti -p 5901:5901 -p 3000:3000  --name orbita-browser orbita-docker:latest 
+        run: |
+          docker run \
+            -e SCREEN_WIDTH=$SCREEN_WIDTH \
+            -e SCREEN_HEIGHT=$SCREEN_HEIGHT \
+            -e PROFILE_ID=$PROFILE_ID \
+            -e TOKEN=$TOKEN \
+            --rm \
+            -p 3000:3000 \
+            --name orbita-browser-${{ github.run_id }} \
+            orbita-docker:latest
       
       - name: Start ngrok tunnel for VNC
         env:
