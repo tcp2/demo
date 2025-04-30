@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+
+/usr/bin/websockify --web=/usr/share/novnc 6080 localhost:5900 &
+novnc=$!
+
+/usr/sbin/nginx -c /etc/nginx/nginx.conf
+
+
 [ -f /tmp/.X99-lock ] && rm -f /tmp/.X99-lock
 
 _kill_procs() {
