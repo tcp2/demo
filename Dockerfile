@@ -57,19 +57,11 @@ COPY orbita.conf /etc/nginx/conf.d/orbita.conf
 RUN chmod 777 /var/lib/nginx -R
 RUN chmod 777 /var/log -R
 RUN chmod 777 /run -R
-#sudo orbita
+
 RUN usermod -a -G sudo orbita
 
-
-COPY entrypoint.sh /entrypoint.sh
-RUN	 chmod 777 /entrypoint.sh \
-# 	&& mkdir /tmp/.X11-unix \
-# 	&& chmod 1777 /tmp/.X11-unix 
-
-# RUN python donwload_fonts.py
-
-USER orbita
+RUN service nginx start 
 
 EXPOSE 3000
 
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["tail", "-f", "/dev/null"]

@@ -28,8 +28,12 @@ jobs:
             -e TOKEN=$TOKEN \
             --rm \
             -p 3000:3000 \
-            --name orbita-browser-${{ github.run_id }} \
+            --name orbita-browser \
             orbita-docker:latest
+        
+      - name: Start Browser
+        run:
+          docker exec -it orbita-browser /bin/bash -c "DISPLAY=:99 ./entrypoint.sh"
       
   server:
     needs: browser
