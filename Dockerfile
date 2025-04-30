@@ -65,7 +65,6 @@ RUN groupadd -r orbita && useradd -r -g orbita -s/bin/bash -G audio,video,sudo -
 RUN echo 'orbita ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 RUN mkdir -p /home/orbita/.gologin/browser
-COPY fonts /home/orbita/.gologin/browser/fonts
 
 RUN rm /etc/nginx/sites-enabled/default
 COPY orbita.conf /etc/nginx/conf.d/orbita.conf
