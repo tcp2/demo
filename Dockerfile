@@ -60,7 +60,9 @@ RUN chmod 777 /run -R
 #sudo orbita
 RUN usermod -a -G sudo orbita
 
-# RUN	 chmod 777 /entrypoint.sh \
+
+COPY entrypoint.sh /entrypoint.sh
+RUN	 chmod 777 /entrypoint.sh \
 # 	&& mkdir /tmp/.X11-unix \
 # 	&& chmod 1777 /tmp/.X11-unix 
 
