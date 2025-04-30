@@ -7,97 +7,53 @@ on:
   workflow_dispatch:
 
 jobs:
-  playwright-chrome-automation:
+  automation:
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.46.1-jammy
-      options: --user 1001 --shm-size=2g
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
-
-      - name: Install dependencies
-        run: |
-          apt-get update
-          apt-get install -y tigervnc-standalone-server tigervnc-common novnc websockify x11-utils xvfb fluxbox net-tools curl
-
-      - name: Install Ngrok
-        run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc > /dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list
-          apt-get update
-          apt-get install -y ngrok
-
-      - name: Configure VNC
-        run: |
-          mkdir -p ~/.vnc
-          echo "password" | vncpasswd -f > ~/.vnc/passwd
-          chmod 600 ~/.vnc/passwd
-
-          # Start X server and Window Manager
-          Xvfb :1 -screen 0 1920x1080x24 &
-          export DISPLAY=:1
-          fluxbox &
-
-          # Start VNC server
-          x11vnc -display :1 -nopw -forever -shared &
-
-          # Start noVNC
-          /usr/share/novnc/utils/launch.sh --vnc localhost:5900 --listen 6080 &
-
-      - name: Start Ngrok
+          node-version: "20"
+      
+      # Tải và cài đặt ngrok trước
+      - name: Setup ngrok
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          ngrok config add-authtoken $NGROK_AUTH_TOKEN
-          ngrok http 6080 --log=stdout > ngrok.log &
+          wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+          tar -xzf ngrok-v3-stable-linux-amd64.tgz
+          chmod +x ./ngrok
+          ./ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+      
+      - name: Run Playwright in devcontainer
+        uses: devcontainers/ci@v0.3
+        with:
+          runCmd: |
+            # Cài đặt dependencies
+            npm ci
+            
+            # Chạy test với Playwright với VNC được bật
+            npm test &
+            
+            # Đợi VNC server khởi động
+            sleep 10
+            
+            # Hiển thị thông tin về container
+            echo "Browser container is running on port 6080 (VNC)"
+            
+            # Giữ container chạy để có thể kết nối từ xa
+            # Không kết thúc job ở đây, sẽ được kiểm soát bởi bước chạy ngrok sau
+      
+      - name: Start ngrok tunnel
+        run: |
+          # Chạy ngrok để tạo tunnel đến port 6080 (VNC port)
+          ./ngrok http 6080 --log=stdout > ngrok.log &
           sleep 5
-          NGROK_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok.log | head -1)
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+          NGROK_URL=$(grep -o 'https://.*\.ngrok\.io\|https://.*\.ngrok-free\.app' ngrok.log | head -n 1)
           echo "Ngrok URL: $NGROK_URL"
-
-      - name: Install Playwright dependencies
-        run: |
-          npm init -y
-          npm install playwright@1.46.1
-
-      - name: Launch Playwright browser
-        run: |
-          cat > launch-browser.js << 'EOL'
-          const { chromium } = require('playwright');
-
-          (async () => {
-            console.log('Starting browser...');
-            // Just launch the browser without headless mode
-            const browser = await chromium.launch({ 
-              headless: false,
-              args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
-            });
-            
-            console.log('Browser launched successfully!');
-            console.log('Access it through the VNC connection provided below.');
-            
-            // Keep the script running to keep the browser open
-            await new Promise(() => {}); // This promise never resolves
-          })().catch(err => {
-            console.error('Error launching browser:', err);
-            process.exit(1);
-          });
-          EOL
-
-          node launch-browser.js &
-
-      - name: Display connection information
-        run: |
-          echo "================================================================"
-          echo "Connection Information:"
-          echo "VNC URL: ${{ env.NGROK_URL }}"
-          echo "VNC Password: password"
-          echo "================================================================"
-
-      - name: Keep alive if debugging
-        run: |
-          tail -f ngrok.log
+          
+          # Hiển thị URL cho người dùng
+          echo "Trình duyệt có thể truy cập tại: $NGROK_URL"
+          
+          # Giữ ngrok và workflow chạy trong một khoảng thời gian
+          sleep 3600
