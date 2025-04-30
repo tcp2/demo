@@ -1,10 +1,10 @@
 FROM ubuntu:20.04
 
 # Install vnc, xvfb in order to create a 'fake' display and chrome
-RUN 	export DEBIAN_FRONTEND=noninteractive
-RUN 	export DISPLAY=0
+RUN export DEBIAN_FRONTEND=noninteractive
+RUN export DISPLAY=0
 
-RUN 	ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
+RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 
 
 RUN apt-get update && apt-get install -y \
@@ -56,7 +56,7 @@ RUN apt-get -qq clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 WORKDIR /opt/orbita
 
 COPY ./ /opt/orbita/
-RUN  pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt
 	
 # Add the browser user (orbita)
 RUN groupadd -r orbita && useradd -r -g orbita -s/bin/bash -G audio,video,sudo -p $(echo 1 | openssl passwd -1 -stdin) orbita  \
@@ -75,8 +75,12 @@ RUN chmod 777 /var/lib/nginx -R
 RUN chmod 777 /var/log -R
 RUN chmod 777 /run -R
 
+#sudo orbita
 RUN usermod -a -G sudo orbita
 
 EXPOSE 3000
 
-ENTRYPOINT ['./entrypoint.sh']
+COPY entrypoint.sh /entrypoint.sh
+RUN	chmod 777 /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
