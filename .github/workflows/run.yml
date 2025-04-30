@@ -19,22 +19,19 @@ jobs:
           sudo apt-get install -y google-chrome-stable
           google-chrome --version
 
-      - name: Install Chrome Remote Desktop
+      - name: Install VNC Server
         run: |
-          wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
-          sudo apt-get install -y xserver-xorg-video-dummy policykit-1 xbase-clients python3-psutil python3-xdg gsettings-desktop-schemas
-          sudo dpkg -i chrome-remote-desktop_current_amd64.deb
-          sudo apt-get install -f -y
-
-      - name: Install xfce4
-        run: |
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y xfce4 desktop-base xfce4-terminal
-          sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
-
-      - name: Setup Selenium and Chrome WebDriver
-        run: |
-          pip install selenium webdriver-manager
-          python -c "from webdriver_manager.chrome import ChromeDriverManager; ChromeDriverManager().install()"
+          sudo apt-get install -y tightvncserver xfce4 xfce4-terminal
+          mkdir -p ~/.vnc
+          echo "password" | vncpasswd -f > ~/.vnc/passwd
+          chmod 600 ~/.vnc/passwd
+          # Configure VNC startup
+          echo '#!/bin/bash' > ~/.vnc/xstartup
+          echo 'startxfce4 &' >> ~/.vnc/xstartup
+          chmod +x ~/.vnc/xstartup
+          # Start VNC server
+          vncserver :1 -geometry 1280x800 -depth 24
+          echo "VNC server started on port 5901"
 
       - name: Start Chrome in Debug Mode
         run: |
@@ -48,28 +45,39 @@ jobs:
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      - name: Start ngrok tunnel
+      - name: Start ngrok tunnels
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           ngrok authtoken $NGROK_AUTH_TOKEN
-          ngrok http 9222 --log=stdout > ngrok.log &
+          # Start ngrok for Chrome debug port
+          ngrok http 9222 --log=stdout > ngrok_chrome.log &
+          # Start ngrok for VNC port
+          ngrok tcp 5901 --log=stdout > ngrok_vnc.log &
           sleep 5
-          NGROK_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok.log | head -n 1)
-          echo "::notice::Chrome remote is available at: $NGROK_URL"
-          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+          CHROME_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok_chrome.log | head -n 1)
+          VNC_URL=$(grep -o 'tcp://.*\.ngrok-free\.app:[0-9]*' ngrok_vnc.log | head -n 1)
+          echo "::notice::Chrome remote is available at: $CHROME_URL"
+          echo "::notice::VNC remote is available at: $VNC_URL (Password: password)"
+          echo "CHROME_URL=$CHROME_URL" >> $GITHUB_ENV
+          echo "VNC_URL=$VNC_URL" >> $GITHUB_ENV
 
       - name: Create connection instruction file
         run: |
           cat << EOF > connection_instructions.txt
-          Chrome Remote Debug URL: $NGROK_URL
+          Chrome Remote Debug URL: $CHROME_URL
+          VNC Server: $VNC_URL (Password: password)
 
-          To connect to this Chrome instance:
-          1. Open your local browser and navigate to $NGROK_URL
+          To connect to Chrome remote debugging:
+          1. Open your local browser and navigate to $CHROME_URL
           2. Click on any of the available targets to inspect
-          3. You can now debug and interact with the remote Chrome browser
 
-          This session will be available for ${{ github.event.inputs.session_duration }} hour(s)
+          To connect to the VNC server:
+          1. Use any VNC client (like VNC Viewer, RealVNC, TigerVNC)
+          2. Connect to the address: $VNC_URL
+          3. Enter password: password
+
+          This session will be available for ${{ github.event.inputs.session_duration || '3' }} hour(s)
           EOF
 
           cat connection_instructions.txt
