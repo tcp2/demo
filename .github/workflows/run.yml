@@ -19,15 +19,15 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      # Run Docker container with GoLogin and Chrome Browser
-      - name: Run Docker container with GoLogin and Chrome Browser
+      # Run Docker container with Chrome and VNC
+      - name: Run Docker container with Chrome and VNC
         run: |
-          docker run -d -p 5901:5901 -p 6080:6080 -p 36912:36912 --name gologin-container --shm-size=2g -e SCREEN_WIDTH=1920 -e SCREEN_HEIGHT=1080 -e SCREEN_DEPTH=24 -e VNC_PASSWORD=password gologinapp/gologin:latest
-          # Verify GoLogin is running properly
-          sleep 30
-          docker exec gologin-container ls -la /GoLogin/
-          echo "GoLogin Docker container with Chrome started and verified"
-          echo "VNC service is available on port 5901 and Remote API on port 36912"
+          docker run -d -p 5901:5900 -p 6080:6080 --name browser-container --shm-size=2g -e RESOLUTION=1280x720x24 nkpro/chrome-vnc
+          # Verify container is running
+          sleep 15
+          docker ps | grep browser-container
+          echo "Docker container with Chrome browser and VNC started"
+          echo "VNC service is available on port 5901"
 
       # Install Ngrok
       - name: Install ngrok
