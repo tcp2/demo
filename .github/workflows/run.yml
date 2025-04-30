@@ -1,0 +1,83 @@
+name: Chrome Remote with Ngrok
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  setup-chrome-remote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
+      - name: Install Chrome Remote Desktop
+        run: |
+          wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+          sudo dpkg -i chrome-remote-desktop_current_amd64.deb
+          sudo apt-get install -f -y
+
+      - name: Install xfce4
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y xfce4 desktop-base xfce4-terminal
+          sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
+
+      - name: Setup Selenium and Chrome WebDriver
+        run: |
+          pip install selenium webdriver-manager
+          python -c "from webdriver_manager.chrome import ChromeDriverManager; ChromeDriverManager().install()"
+
+      - name: Start Chrome in Debug Mode
+        run: |
+          # Start Chrome in headless debug mode
+          google-chrome --headless --disable-gpu --remote-debugging-port=9222 --no-sandbox &
+          echo "Chrome started in debug mode on port 9222"
+
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok
+
+      - name: Start ngrok tunnel
+        env:
+          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+        run: |
+          ngrok authtoken $NGROK_AUTH_TOKEN
+          ngrok http 9222 --log=stdout > ngrok.log &
+          sleep 5
+          NGROK_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok.log | head -n 1)
+          echo "::notice::Chrome remote is available at: $NGROK_URL"
+          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+
+      - name: Create connection instruction file
+        run: |
+          cat << EOF > connection_instructions.txt
+          Chrome Remote Debug URL: $NGROK_URL
+
+          To connect to this Chrome instance:
+          1. Open your local browser and navigate to $NGROK_URL
+          2. Click on any of the available targets to inspect
+          3. You can now debug and interact with the remote Chrome browser
+
+          This session will be available for ${{ github.event.inputs.session_duration }} hour(s)
+          EOF
+
+          cat connection_instructions.txt
+
+      - name: Keep alive
+        env:
+          SESSION_DURATION: 3
+        run: |
+          session_duration=$SESSION_DURATION
+          duration_seconds=$((session_duration * 3600))
+          echo "Keeping session alive for $session_duration hour(s)"
+          sleep $duration_seconds
