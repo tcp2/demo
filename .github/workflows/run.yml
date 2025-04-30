@@ -25,11 +25,6 @@ jobs:
           docker run -d -p 5901:5901 --name vnc-container consol/ubuntu-xfce-vnc:latest
           echo "Docker container started with VNC"
 
-      # Start VNC server inside Docker container
-      - name: Start VNC server in Docker container
-        run: |
-          docker exec vnc-container bash -c "vncserver :1 -geometry 1280x800 -depth 24"
-          echo "VNC server started on port 5901"
 
       # Install Ngrok
       - name: Install ngrok
