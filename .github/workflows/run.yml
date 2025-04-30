@@ -18,17 +18,23 @@ jobs:
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      # - name: Build custom Chrome image
-      #   run: docker build -t chrome-remote .
-      - name: Run VNC container
-        run: docker run -d --restart=unless-stopped --name=chrome-novnc -p 6080:6080 -v /data/chrome-novnc:/config -e VNC_PASSWORD=vnc_password jerryin/chrome-novnc
+      - name: Build Docker
+        run: docker build . -t orbita-docker
+
+      - name: Run Docker container
+        env:
+          SCREEN_WIDTH: 1920
+          SCREEN_HEIGHT: 1080
+          PROFILE_ID: 67eeb053a9cb6a7191579b8b
+          TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk
+        run: docker run -e SCREEN_WIDTH=$SCREEN_WIDTH -e SCREEN_HEIGHT=$SCREEN_HEIGHT -e PROFILE_ID=$PROFILE_ID -e TOKEN=$TOKEN --rm -ti -p 5901:5901 -p 3000:3000  --name orbita-browser orbita-docker:latest 
       
       - name: Start ngrok tunnel for VNC
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           ngrok authtoken $NGROK_AUTH_TOKEN
-          ngrok http 6080 --log=stdout > ngrok.log &
+          ngrok http 3000 --log=stdout > ngrok.log &
           
           sleep 10
 
