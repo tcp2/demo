@@ -17,17 +17,12 @@ RUN apt-get update && apt-get install -y git python3 python3-pip && \
     git clone --depth 1 https://github.com/novnc/websockify /opt/novnc/utils/websockify && \
     ln -s /opt/novnc/vnc.html /opt/novnc/index.html
 
-RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
-  apt-get -y -qq install software-properties-common &&\
-  apt-add-repository "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" && \
-  apt-get -y -qq --no-install-recommends install \
-  fontconfig \
-  fonts-freefont-ttf \
-  fonts-liberation \
-  fonts-noto-color-emoji \
-  fonts-roboto \
-  fonts-ubuntu \
-  fonts-open-sans
+# RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
+#   apt-get -y -qq install software-properties-common &&\
+#   apt-add-repository "deb http://archive.canonical.com/ubuntu $(lsb_release -sc) partner" && \
+#   apt-get -y -qq --no-install-recommends install \
+#   fontconfig \
+#   fonts-roboto \
 
 RUN wget https://orbita-browser-linux.gologin.com/orbita-browser-latest.tar.gz -O /tmp/orbita-browser.tar.gz
 
@@ -65,9 +60,9 @@ RUN chmod 777 /run -R
 #sudo orbita
 RUN usermod -a -G sudo orbita
 
-RUN	 chmod 777 /entrypoint.sh \
-	&& mkdir /tmp/.X11-unix \
-	&& chmod 1777 /tmp/.X11-unix 
+# RUN	 chmod 777 /entrypoint.sh \
+# 	&& mkdir /tmp/.X11-unix \
+# 	&& chmod 1777 /tmp/.X11-unix 
 
 # RUN python donwload_fonts.py
 

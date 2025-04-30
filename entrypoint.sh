@@ -1,24 +1,30 @@
 #!/bin/bash
+set -e
 
-mkdir ~/.vnc
-DISPLAY=:0
-export DISPLAY=:0
-echo $SCREEN_WIDTH
-echo $SCREEN_HEIGHT
-echo `echo $SCREEN_WIDTH`x`echo $SCREEN_HEIGHT`x16
+[ -f /tmp/.X99-lock ] && rm -f /tmp/.X99-lock
 
-cd /opt/orbita
-Xvfb $DISPLAY -screen 0 `echo $SCREEN_WIDTH`x`echo $SCREEN_HEIGHT`x16 &
-sleep 3
-# x11vnc -storepasswd 12345678 ~/.vnc/passwd
-x11vnc -display $DISPLAY -nopw -bg -forever -usepw -quiet -rfbport 5901 -xkb
+_kill_procs() {
+  kill -TERM $node
+  kill -TERM $xvfb
+}
 
-# Khởi động noVNC server
-cd /opt/novnc
-# Khởi động với websockify và cấu hình đường dẫn web
-./utils/launch.sh --vnc localhost:5901 --listen 6080 &
-cd /opt/orbita
+trap _kill_procs SIGTERM SIGINT
 
-# Khởi động nginx
-/usr/sbin/nginx -c /etc/nginx/nginx.conf
-python app/main.py 
+
+if [ -z "$DISPLAY" ]
+then
+  Xvfb :99 -screen 0 1024x768x16 -nolisten tcp -nolisten unix &
+  xvfb=$!
+  export DISPLAY=:99
+fi
+
+
+python app/main.py "$@" &
+node=$!
+
+wait $node
+
+if [ ! -z "$xvfb" ]
+then
+  wait $xvfb
+fi
