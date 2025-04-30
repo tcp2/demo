@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "gologin": "^1.0.51",
-    "puppeteer-core": "^16.2.0"
+    "gologin": "^2.1.21"
   }
 }

@@ -21,4 +21,4 @@ cd /opt/orbita
 
 # Khởi động nginx
 /usr/sbin/nginx -c /etc/nginx/nginx.conf
-node index.js
+node index.mjs

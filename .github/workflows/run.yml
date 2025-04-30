@@ -7,17 +7,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  automation:
+  browser:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install ngrok
-        run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install ngrok
-
+      - uses: actions/checkout@v4      
       - name: Build Docker
         run: docker build . -t orbita-docker
 
@@ -38,25 +31,39 @@ jobs:
             --name orbita-browser-${{ github.run_id }} \
             orbita-docker:latest
       
-      - name: Start ngrok tunnel for VNC
+  server:
+    needs: browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull ngrok Docker image
+        run: docker pull ngrok/ngrok:latest
+
+      - name: Run ngrok in Docker container
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          ngrok authtoken $NGROK_AUTH_TOKEN
-          ngrok http 3000 --log=stdout > ngrok.log &
+          # Run ngrok in Docker container
+          docker run -d \
+            --name ngrok-container \
+            -e NGROK_AUTHTOKEN=$NGROK_AUTH_TOKEN \
+            -p 4040:4040 \
+            ngrok/ngrok:latest http host.docker.internal:3000
           
+          # Wait for ngrok to start
           sleep 10
-
-          echo "Extracting ngrok public URL..."
-          grep -o "url=https://[0-9a-zA-Z.-]*" ngrok.log | tail -n1 | cut -d'=' -f2 | tee ngrok_url.txt
-
+          
+          # Get the URL directly
+          docker exec ngrok-container wget -q -O- http://localhost:4040/api/tunnels > ngrok_info.json
+          
+          # Simple extraction using grep
+          grep -o "https://[a-zA-Z0-9.-]*\.ngrok\.io" ngrok_info.json | head -n1 > ngrok_url.txt
+          
           echo "========== noVNC ACCESS =========="
           echo "Open this URL in your browser:"
           cat ngrok_url.txt
           echo "=================================="
-        
-          # Giữ cho workflow chạy một thời gian để bạn có thể kết nối
-          tail -f ngrok.log
-
+          
+          # Keep the workflow running
+          docker logs -f ngrok-container
 
 
