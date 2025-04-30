@@ -11,41 +11,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-      
+
       - name: Install ngrok
         run: |
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install ngrok
 
-      - name: Run Playwright in devcontainer
-        uses: devcontainers/ci@v0.3
-        
+      - name: Run Chrome + noVNC container
+        run: |
+          docker run -d \
+            --name vnc-chrome \
+            -p 6080:80 \
+            dorowu/ubuntu-desktop-lxde-vnc
+
       - name: Start ngrok tunnel for VNC
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           ngrok authtoken $NGROK_AUTH_TOKEN
-          ngrok tcp 6080 --log=stdout > ngrok.log &
+          ngrok http 6080 --log=stdout > ngrok.log &
           
-          # Đợi ngrok khởi động
           sleep 10
-          
-          # Trích xuất và hiển thị địa chỉ ngrok
-          echo "Extracting ngrok URL..."
-          grep -o "url=tcp://.*" ngrok.log | tail -n1 | cut -d'/' -f3 | tee ngrok_url.txt
-          
-          echo "========== NGROK PUBLIC URL =========="
-          echo "VNC viewer address: $(cat ngrok_url.txt)"
-          echo "Use this address with any VNC viewer client"
-          echo "Default VNC password is 'secret'"
-          echo "======================================"
-          
+
+          echo "Extracting ngrok public URL..."
+          grep -o "url=https://[0-9a-zA-Z.-]*" ngrok.log | tail -n1 | cut -d'=' -f2 | tee ngrok_url.txt
+
+          echo "========== noVNC ACCESS =========="
+          echo "Open this URL in your browser:"
+          cat ngrok_url.txt
+          echo "=================================="
+        
           # Giữ cho workflow chạy một thời gian để bạn có thể kết nối
-          echo "Keeping the tunnel open for 30 minutes..."
           tail -f ngrok.log
 
 
