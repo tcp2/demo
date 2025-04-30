@@ -1,4 +1,4 @@
-name: VNC with Ngrok in Docker
+name: Chrome Automation with Playwright and Ngrok
 
 on:
   push:
@@ -7,46 +7,97 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-vnc:
+  playwright-chrome-automation:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.46.1-jammy
+      options: --user 1001 --shm-size=2g
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v2
-      - name: Start Chrome with noVNC
-        run: |
-          docker run -d \
-            -p 5980:5980 \
-            -e RESOLUTION=1280x720x24 \
-            --name browser \
-            nkpro/chrome-novnc
-          sleep 8
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-      # Install Ngrok
-      - name: Install ngrok
+      - name: Install dependencies
         run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install ngrok
-      
-      # Start ngrok tunnel for VNC and noVNC
-      - name: Start ngrok tunnels for remote access
+          apt-get update
+          apt-get install -y tigervnc-standalone-server tigervnc-common novnc websockify x11-utils xvfb fluxbox net-tools curl
+
+      - name: Install Ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc > /dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list
+          apt-get update
+          apt-get install -y ngrok
+
+      - name: Configure VNC
+        run: |
+          mkdir -p ~/.vnc
+          echo "password" | vncpasswd -f > ~/.vnc/passwd
+          chmod 600 ~/.vnc/passwd
+
+          # Start X server and Window Manager
+          Xvfb :1 -screen 0 1920x1080x24 &
+          export DISPLAY=:1
+          fluxbox &
+
+          # Start VNC server
+          x11vnc -display :1 -nopw -forever -shared &
+
+          # Start noVNC
+          /usr/share/novnc/utils/launch.sh --vnc localhost:5900 --listen 6080 &
+
+      - name: Start Ngrok
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install -y ngrok jq
-          ngrok authtoken $NGROK_AUTH_TOKEN
-          ngrok http 5980 --log=stdout > ngrok.log &
+          ngrok config add-authtoken $NGROK_AUTH_TOKEN
+          ngrok http 6080 --log=stdout > ngrok.log &
+          sleep 5
+          NGROK_URL=$(grep -o 'https://.*\.ngrok-free\.app' ngrok.log | head -1)
+          echo "NGROK_URL=$NGROK_URL" >> $GITHUB_ENV
+          echo "Ngrok URL: $NGROK_URL"
 
-      # Create connection instruction file
-      - name: Wait and show access URL
+      - name: Install Playwright dependencies
         run: |
-          sleep 10
-          curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' > url.txt
-          echo "::notice::🌐 Access Chrome via noVNC at: $(cat url.txt)"
+          npm init -y
+          npm install playwright@1.46.1
 
-      - name: Keep session alive
-        run: tail -f ngrok.log
+      - name: Launch Playwright browser
+        run: |
+          cat > launch-browser.js << 'EOL'
+          const { chromium } = require('playwright');
+
+          (async () => {
+            console.log('Starting browser...');
+            // Just launch the browser without headless mode
+            const browser = await chromium.launch({ 
+              headless: false,
+              args: ['--no-sandbox', '--disable-setuid-sandbox', '--start-maximized']
+            });
+            
+            console.log('Browser launched successfully!');
+            console.log('Access it through the VNC connection provided below.');
+            
+            // Keep the script running to keep the browser open
+            await new Promise(() => {}); // This promise never resolves
+          })().catch(err => {
+            console.error('Error launching browser:', err);
+            process.exit(1);
+          });
+          EOL
+
+          node launch-browser.js &
+
+      - name: Display connection information
+        run: |
+          echo "================================================================"
+          echo "Connection Information:"
+          echo "VNC URL: ${{ env.NGROK_URL }}"
+          echo "VNC Password: password"
+          echo "================================================================"
+
+      - name: Keep alive if debugging
+        run: |
+          tail -f ngrok.log
