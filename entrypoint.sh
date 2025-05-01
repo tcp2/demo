@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-
-
-
 [ ! -d /root/.vnc ] && mkdir  /root/.vnc
 [ -f /tmp/.X99-lock ] && rm -f /tmp/.X99-lock
 [ -f /tmp/.X0-lock ] && rm -f /tmp/.X0-lock
@@ -19,10 +16,10 @@ xvfb=$!
 
 echo "Xvfb started on display 1024x768x16 :0"
 export DISPLAY=:0
-sleep 5
+sleep 8
 
 cd /app
-
+echo "Starting VNC server"
 x11vnc -storepasswd 12345678 /root/.vnc/passwd
 x11vnc -display $DISPLAY -bg -forever -usepw -quiet -rfbport 5901 n -xkb
 echo "x11vnc started on port 5901"
