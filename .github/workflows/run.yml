@@ -32,48 +32,33 @@ jobs:
             -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
             --name anti \
             minhvh/anti:latest
-        
-  server:
-    needs: browser
-    runs-on: ubuntu-latest
-    steps:
-      - name: Pull ngrok Docker image
-        run: docker pull ngrok/ngrok:latest
 
-      - name: Run ngrok in Docker container
+      - name: Run Server
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          # Run ngrok in Docker container
           docker run -d \
             --name ngrok-web \
             -e NGROK_AUTHTOKEN=$NGROK_AUTH_TOKEN \
             -p 4040:4040 \
             ngrok/ngrok:latest http 127.0.0.1:80
-            
-          # Khởi chạy ngrok cho vnc (port 5901)
+
           docker run -d \
             --name ngrok-vnc \
             -e NGROK_AUTHTOKEN=$NGROK_AUTH_TOKEN \
             ngrok/ngrok:latest tcp 127.0.0.1:5901
 
-
-          
-          # Wait for ngrok to start
           sleep 10
-          
-          # Get the URL directly
-          docker exec ngrok-container wget -q -O- http://localhost:4040/api/tunnels > ngrok_info.json
-          
-          # Simple extraction using grep
-          grep -o "https://[a-zA-Z0-9.-]*\.ngrok\.io" ngrok_info.json | head -n1 > ngrok_url.txt
-          
+
+          curl -s http://localhost:4040/api/tunnels | grep -o "https://[a-zA-Z0-9.-]*\.ngrok\.io" | head -n1 > ngrok_url.txt
+
           echo "========== noVNC ACCESS =========="
           echo "Open this URL in your browser:"
           cat ngrok_url.txt
           echo "=================================="
-          
-          # Keep the workflow running
-          docker logs -f ngrok-container
+
+      - name: Keep job alive for debugging
+        run: sleep 300  
+ 
 
 

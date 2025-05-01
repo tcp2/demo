@@ -29,3 +29,5 @@ gl = GoLogin(
     }
 )
 gl.start()
+
+print("Browser READY | profile:", PROFILE_ID)
