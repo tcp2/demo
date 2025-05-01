@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4      
-      - name: Build Docker
-        run: docker pull minhvh/antibrowser:latest
-
       - name: Run Docker container
         env:
           SCREEN_WIDTH: 1920
@@ -27,7 +24,8 @@ jobs:
             -e PROFILE_ID=$PROFILE_ID \
             -e TOKEN=$TOKEN \
             --rm \
-            -p 3000:3000 \
+            -p 80:80 \
+            -p 5901:5901 \
             --name antibrowser \
             minhvh/antibrowser:latest
         
@@ -44,10 +42,18 @@ jobs:
         run: |
           # Run ngrok in Docker container
           docker run -d \
-            --name ngrok-container \
+            --name ngrok-web \
             -e NGROK_AUTHTOKEN=$NGROK_AUTH_TOKEN \
             -p 4040:4040 \
-            ngrok/ngrok:latest http host.docker.internal:3000
+            ngrok/ngrok:latest http 127.0.0.1:80
+            
+          # Khởi chạy ngrok cho vnc (port 5901)
+          docker run -d \
+            --name ngrok-vnc \
+            -e NGROK_AUTHTOKEN=$NGROK_AUTH_TOKEN \
+            ngrok/ngrok:latest tcp 127.0.0.1:5901
+
+
           
           # Wait for ngrok to start
           sleep 10
