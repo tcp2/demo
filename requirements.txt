@@ -1,6 +1,6 @@
 requests
 psutil
 numpy
-glogin
+glogin==2025.5.1002
 playwright
 fastapi[standard]

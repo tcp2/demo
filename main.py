@@ -1,7 +1,6 @@
-import asyncio
 import os
 import subprocess
-from gologin import GoLogin
+from gologin.gologin import GoLogin
 from playwright.async_api import async_playwright
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
@@ -26,6 +25,7 @@ def start():
             "credentials_enable_service": False,
             "port": 3500,
             "extra_params": [
+                "--remote-debugging-address=0.0.0.0"
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
