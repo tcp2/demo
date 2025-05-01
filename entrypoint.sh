@@ -20,6 +20,7 @@ trap _kill_procs SIGTERM SIGINT
 
 Xvfb :0 -screen 0 1024x768x16 &
 xvfb=$!
+
 echo "Xvfb started on display 1024x768x16 :0"
 export DISPLAY=:0
 sleep 5
