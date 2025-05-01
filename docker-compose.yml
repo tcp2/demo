@@ -1,0 +1,31 @@
+services:
+  orbita-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: anti
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+      - "5901:5901"
+      - "3500:3500"
+    volumes:
+      - .:/app
+      - ./entrypoint.sh:/entrypoint.sh
+      - ./.docker/app.conf:/etc/nginx/conf.d/app.conf
+    environment:
+      - DISPLAY=:99
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1080
+      - PROFILE_ID=67eeb053a9cb6a7191579b8b
+      - TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk
+
+  novnc:
+    image: bonigarcia/novnc:1.2.0
+    container_name: novnc
+    platform: linux/amd64
+    ports:
+      - "6080:6080"  # Giao diện noVNC sẽ được hiển thị trên cổng 8080
+    environment:
+      - VNC_SERVER=orbita-app:5901
+      - VNC_PASSWORD=12345678
