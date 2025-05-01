@@ -26,8 +26,8 @@ jobs:
             --rm \
             -p 80:80 \
             -p 5901:5901 \
-            --name antibrowser \
-            minhvh/antibrowser:latest
+            --name anti \
+            minhvh/anti:latest
         
   server:
     needs: browser
