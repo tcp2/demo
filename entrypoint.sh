@@ -32,8 +32,3 @@ echo "FastAPI started on port 8000"
 echo "Nginx started port 3000"
 
 dumb-init python start.py
-
-if [ ! -z "$xvfb" ]
-then
-  wait $xvfb
-fi
