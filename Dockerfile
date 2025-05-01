@@ -36,6 +36,10 @@ COPY .docker/app.conf /etc/nginx/conf.d/app.conf
 # Ensure permissions for nginx, logs
 RUN chmod -R 777 /var/lib/nginx /var/log /run
 
+RUN wget https://orbita-browser-linux.gologin.com/orbita-browser-latest.tar.gz -O /tmp/orbita.tar.gz && \
+tar -xzf /tmp/orbita.tar.gz -C /usr/bin && \
+rm -f /tmp/orbita.tar.gz
+
 EXPOSE 3500
 EXPOSE 5901
 

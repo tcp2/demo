@@ -1,11 +1,7 @@
 #!/bin/bash
 set -e
 
-if [ ! -d /usr/bin/orbita-browser ]; then
-  wget https://orbita-browser-linux.gologin.com/orbita-browser-latest.tar.gz -O /tmp/orbita.tar.gz
-  tar -xzf /tmp/orbita.tar.gz -C /usr/bin
-  rm -f /tmp/orbita.tar.gz
-fi
+
 
 
 [ ! -d /root/.vnc ] && mkdir  /root/.vnc
