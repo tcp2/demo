@@ -26,6 +26,10 @@ jobs:
             --rm \
             -p 80:80 \
             -p 5901:5901 \
+            -p 3500:3500 \
+            -v $(pwd):/app \
+            -v $(pwd)/entrypoint.sh:/entrypoint.sh \
+            -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
             --name anti \
             minhvh/anti:latest
         
