@@ -11,12 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4      
-      - name: Start server by running docker-compose
-        run: docker-compose up -d
-        shell: bash
-
-      - name: Run composite action
-        uses: ./.github/actions/start-server
+      - uses: ./.github/actions/start-server
 
 
 
