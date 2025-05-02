@@ -33,7 +33,11 @@ jobs:
             -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
             --name anti \
             minhvh/anti:latest
-      
+
+      - name: Install Ngrok
+        run: |
+          resp=$(curl -s -X GET https://127.0.0.1:9000/api/ping)
+          echo "Response: $resp"
 
       - name: Install Ngrok
         env:

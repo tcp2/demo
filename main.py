@@ -14,6 +14,10 @@ app = FastAPI()
 
 os.environ["DISPLAY"] = DISPLAY
 
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
+
 @app.get("/api/start")
 def start():
     gl = GoLogin(
