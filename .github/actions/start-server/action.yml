@@ -20,26 +20,13 @@ runs:
         echo "Response: $resp"
       shell: bash
 
-    - name: 'Install Ngrok'
-      env:
-        NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+    - name: 'Print public URL'
       run: |
-        curl -sLO https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
-        unzip ngrok-stable-linux-amd64.zip
-        sudo mv ngrok /usr/local/bin
-        ngrok config add-authtoken $NGROK_AUTH_TOKEN
-        
-        # Start ngrok tunnels in background
-        ngrok http 9000 --log=ngrok_http.log &
-        ngrok tcp 5901 --log=ngrok_tcp.log &
-
         sleep 5
-
-        HTTP_URL=$(grep -o 'https://[^ ]*' ngrok_http.log | head -n 1)
-        VNC_URL=$(grep -o 'tcp://[^ ]*' ngrok_tcp.log | head -n 1)
+        echo  "Public URL: $(curl -s http://localhost:4040/api/tunnels)"
         
-        echo "HTTP URL: $HTTP_URL"
-        echo "VNC URL: $VNC_URL"
+        echo "Waiting for ngrok..."
+        echo "Public URL: $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')"
       shell: bash
 
     - name: 'Keep alive'

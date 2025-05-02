@@ -1,0 +1,10 @@
+version: 2
+tunnels:
+  web:
+    proto: http
+    addr: anti:9000
+    inspect: true
+  vnc:
+    proto: tcp
+    addr: anti:5901
+    inspect: true

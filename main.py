@@ -14,7 +14,7 @@ app = FastAPI()
 
 os.environ["DISPLAY"] = DISPLAY
 
-@app.get("/ping")
+@app.get("/api/ping")
 def ping():
     return {"status": "ok"}
 
