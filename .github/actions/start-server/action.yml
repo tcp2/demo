@@ -18,21 +18,6 @@ runs:
         done
         resp=$(curl http://localhost:9000/api/ping)
         echo "Response: $resp"
-        echo "IP Address: $(curl -s ifconfig.me)"
-      shell: bash
-
-    - name: 'Print public URL'
-      run: |
-        for i in {1..5}; do
-          res=$(curl -s http://localhost:4040/api/tunnels)
-          https=$(grep -o 'https://[^"]*' <<< "$res" | head -n1)
-          tcp=$(grep -o 'tcp://[^"]*' <<< "$res" | head -n1)
-          [[ $https || $tcp ]] && break
-          sleep 1
-        done
-        [[ $https || $tcp ]] || { echo "❌ ngrok public_url not found"; exit 1; }
-        echo "✅ Public URL: $https"
-        echo "✅ TCP URL: $tcp"
       shell: bash
 
     - name: 'Keep alive'

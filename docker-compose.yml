@@ -18,16 +18,13 @@ services:
       - PROFILE_ID=67eeb053a9cb6a7191579b8b
       - TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk
 
-  ngrok:
-    image: ngrok/ngrok:latest
-    container_name: ngrok
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
     restart: unless-stopped
     depends_on:
       - anti
-    ports:
-      - "4040:4040"
     environment:
-      - NGROK_AUTHTOKEN=2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
-    volumes:
-      - ./.docker/ngrok.yml:/etc/ngrok.yml
-    command: start --all --config=/etc/ngrok.yml
+      - TUNNEL_TOKEN=eyJhIjoiYmE2MDA4YWFmN2U2YzQ4MGRjODA1N2QyYTk0ODk3NDUiLCJ0IjoiYjJkMTQwYzctMGNiNy00NjY0LThiNjctMTBmY2JhY2FlYTFlIiwicyI6Ik1qbGxNekV5TXpNdE16Wm1aaTAwTWpjeExXRTNaRGd0TldNMk9XRTNOalEwTmpSaCJ9
+    command: tunnel run     
+
