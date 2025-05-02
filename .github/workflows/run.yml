@@ -24,7 +24,6 @@ jobs:
             -e PROFILE_ID=$PROFILE_ID \
             -e TOKEN=$TOKEN \
             --rm \
-            -p 80:80 \
             -p 9000:80 \
             -p 5901:5901 \
             -p 3500:3500 \
@@ -36,7 +35,7 @@ jobs:
 
       - name: Install Ngrok
         run: |
-          resp=$(curl http://127.0.0.1:9000/api/ping)
+          resp=$(curl -s http://127.0.0.1:9000/api/ping)
           echo "Response: $resp"
 
       - name: Install Ngrok
