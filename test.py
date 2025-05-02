@@ -9,7 +9,6 @@ async def main():
         browser = await pw.chromium.connect_over_cdp("http://m1.laobo.xyz")
         wk_id = '7dmgX875oL49qe11GVfTk'
         url = f'chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/{wk_id}'
-        await p.goto(url)
         # await p.goto("chrome::/")
         # print("New p URL:", p.url)
         # 

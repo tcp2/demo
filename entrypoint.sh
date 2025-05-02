@@ -16,16 +16,16 @@ xvfb=$!
 
 echo "Xvfb started on display 1024x768x16 :0"
 export DISPLAY=:0
-sleep 8
+sleep 3
 
 cd /app
 echo "Starting VNC server"
-x11vnc -storepasswd 12345678 /root/.vnc/passwd
-x11vnc -display $DISPLAY -bg -forever -usepw -quiet -rfbport 5901 -xkb
-echo "x11vnc started on port 5901"
+# x11vnc -storepasswd 12345678 /root/.vnc/passwd
+# x11vnc -display $DISPLAY -bg -forever -usepw -quiet -rfbport 5901 -xkb
+# echo "x11vnc started on port 5901"
 
 # uvicorn main:app --host 0.0.0.0 --port 8000 &
-# fastapi dev main.py --host 0.0.0.0 --port 8000 &
+fastapi dev main.py --host 0.0.0.0 --port 8000 &
 # echo "FastAPI started on port 8000"
 
 echo "Nginx started port 3000"
