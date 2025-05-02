@@ -1,0 +1,48 @@
+name: 'Start server'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Checkout code'
+      uses: actions/checkout@v4
+
+    - name: 'Start server by running docker-compose'
+      run: docker-compose up -d
+      shell: bash
+      
+    - name: 'Wait for server to be ready'
+      run: |
+        while ! curl -s http://localhost:9000 > /dev/null; do
+          echo "Waiting for server..."
+          sleep 5
+        done
+      shell: bash
+
+    - name: 'Install Ngrok'
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+      run: |
+        curl -sLO https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+        unzip ngrok-stable-linux-amd64.zip
+        sudo mv ngrok /usr/local/bin
+        ngrok config add-authtoken $NGROK_AUTH_TOKEN
+        
+        # Configure ngrok
+        ngrok config add-authtoken $NGROK_AUTH_TOKEN
+        
+        # Start ngrok tunnels in background
+        ngrok http 9000 --log=ngrok_http.log &
+        ngrok tcp 5901 --log=ngrok_tcp.log &
+
+        sleep 5
+
+        HTTP_URL=$(grep -o 'https://[^ ]*' ngrok_http.log | head -n 1)
+        VNC_URL=$(grep -o 'tcp://[^ ]*' ngrok_tcp.log | head -n 1)
+        
+        echo "HTTP URL: $HTTP_URL"
+        echo "VNC URL: $VNC_URL"
+      shell: bash
+
+    - name: 'Keep alive'
+      run: sleep 300
+      shell: bash
