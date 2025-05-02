@@ -31,29 +31,26 @@ jobs:
             -v $(pwd)/entrypoint.sh:/entrypoint.sh \
             -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
             --name anti \
-            minhvh/anti:latest
-
-      - name: Install ngrok
+            minhvh/anti:latest \
+            &
+      
+      - name: Install & Configure Ngrok
+        env:
+          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
-          # Tải và giải nén ngrok
-          wget -qO- https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip > ngrok.zip
-          unzip ngrok.zip
-          sudo mv ngrok /usr/local/bin  # Di chuyển ngrok vào thư mục bin để có thể sử dụng từ dòng lệnh
+          wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+          tar xvzf ngrok-v3-stable-linux-amd64.tgz
+          ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
+          ./ngrok http 80 > /dev/null &
+          ./ngrok tcp 5901 > /dev/null &
+          sleep 5
 
-      - name: Run ngrok
-        run: |
-          ngrok authtoken 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
-          nohup ngrok http 80 &
+          echo "HTTP URL: $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')"
+          echo "VNC URL: $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[1].public_url')"
+          
+      - name: Keep alive
+        run: sleep 6h
 
-          sleep 10
 
-          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
-
-          echo "========== Ngrok Public URL =========="
-          echo "Open this URL in your browser: $ngrok_url"
-          echo "======================================"
-      - name: Keep job alive for debugging
-        run: sleep 300  
- 
 
 
