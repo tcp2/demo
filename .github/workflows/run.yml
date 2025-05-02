@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Ngrok
         run: |
-          resp=$(curl -s -X GET https://127.0.0.1:9000/api/ping)
+          resp=$(curl https://127.0.0.1:9000/api/ping)
           echo "Response: $resp"
 
       - name: Install Ngrok
