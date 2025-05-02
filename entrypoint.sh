@@ -25,8 +25,8 @@ x11vnc -display $DISPLAY -bg -forever -usepw -quiet -rfbport 5901 -xkb
 echo "x11vnc started on port 5901"
 
 # uvicorn main:app --host 0.0.0.0 --port 8000 &
-fastapi dev main.py &
-echo "FastAPI started on port 8000"
+# fastapi dev main.py --host 0.0.0.0 --port 8000 &
+# echo "FastAPI started on port 8000"
 
 echo "Nginx started port 3000"
 
