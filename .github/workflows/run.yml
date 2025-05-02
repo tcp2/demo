@@ -24,15 +24,14 @@ jobs:
             -e PROFILE_ID=$PROFILE_ID \
             -e TOKEN=$TOKEN \
             --rm \
-            -p 80:80 \
+            -p 9000:80 \
             -p 5901:5901 \
             -p 3500:3500 \
             -v $(pwd):/app \
             -v $(pwd)/entrypoint.sh:/entrypoint.sh \
             -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
             --name anti \
-            minhvh/anti:latest \
-            &
+            minhvh/anti:latest
       
       - name: Install & Configure Ngrok
         env:
@@ -49,7 +48,7 @@ jobs:
           echo "VNC URL: $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[1].public_url')"
           
       - name: Keep alive
-        run: sleep 6h
+        run: sleep 300
 
 
 
