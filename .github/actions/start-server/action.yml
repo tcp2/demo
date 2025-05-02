@@ -12,11 +12,11 @@ runs:
 
     - name: 'Wait for server to be ready'
       run: |
-        while ! curl -s http://localhost:9000 > /dev/null; do
+        while ! curl -s http://localhost:8000 > /dev/null; do
           echo "Waiting for server..."
           sleep 1
         done
-        resp=$(curl http://localhost:9000/api/ping)
+        resp=$(curl http://localhost:8000/api/ping)
         echo "Response: $resp"
       shell: bash
 
