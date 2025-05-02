@@ -4,7 +4,8 @@ services:
     container_name: anti
     platform: linux/amd64
     ports:
-      - "80:80"
+      - "9000:80"
+      - "8000:8000"
       - "5901:5901"
       - "3500:3500"
     volumes:
