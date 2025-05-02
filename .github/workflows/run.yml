@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4      
-      - name: Run Docker container
+      - name: Install Anti
         env:
           SCREEN_WIDTH: 1920
           SCREEN_HEIGHT: 1080
@@ -34,15 +34,15 @@ jobs:
             --name anti \
             minhvh/anti:latest
       
-      - name: Install & Configure Ngrok
+      - name: Install Ngrok
         env:
           NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
           tar xvzf ngrok-v3-stable-linux-amd64.tgz
           ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
-          ./ngrok http 80 > /dev/null &
-          ./ngrok tcp 5901 > /dev/null &
+          ./ngrok http 80 > ngrok_http.log &
+          ./ngrok tcp 5901 > ngrok_tcp.log &
           sleep 5
 
           HTTP_URL=$(grep -o 'http://[a-zA-Z0-9]*\.ngrok\.io' ngrok_http.log | head -n 1)
