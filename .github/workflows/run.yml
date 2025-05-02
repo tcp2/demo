@@ -24,6 +24,7 @@ jobs:
             -e PROFILE_ID=$PROFILE_ID \
             -e TOKEN=$TOKEN \
             --rm \
+            -p 80:80 \
             -p 9000:80 \
             -p 5901:5901 \
             -p 3500:3500 \
