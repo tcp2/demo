@@ -14,10 +14,11 @@ runs:
       run: |
         while ! curl -s http://localhost:9000 > /dev/null; do
           echo "Waiting for server..."
-          sleep 5
+          sleep 1
         done
         resp=$(curl http://localhost:9000/api/ping)
         echo "Response: $resp"
+        echo "IP Address: $(curl -s ifconfig.me)"
       shell: bash
 
     - name: 'Print public URL'
