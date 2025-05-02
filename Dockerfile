@@ -42,6 +42,7 @@ rm -f /tmp/orbita.tar.gz
 
 EXPOSE 3500
 EXPOSE 5901
+EXPOSE 8000
 EXPOSE 80
 
 COPY entrypoint.sh /entrypoint.sh
