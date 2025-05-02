@@ -16,7 +16,7 @@ runs:
           echo "Waiting for server..."
           sleep 5
         done
-        resp = $(curl http://localhost:9000/api/ping)
+        resp=$(curl http://localhost:9000/api/ping)
         echo "Response: $resp"
       shell: bash
 
