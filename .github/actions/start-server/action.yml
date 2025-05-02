@@ -7,7 +7,7 @@ runs:
       uses: actions/checkout@v4
 
     - name: 'Start server by running docker-compose'
-      run: docker-compose up -d
+      run: docker compose up -d
       shell: bash
 
     - name: 'Wait for server to be ready'
