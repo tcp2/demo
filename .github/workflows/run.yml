@@ -33,18 +33,25 @@ jobs:
             --name anti \
             minhvh/anti:latest
 
-      - name: Run Server
+      - name: Install ngrok
         run: |
-          docker run -d \
-            --name ngrok \
-            -v $(pwd)/.docker/ngrok.yml:/etc/ngrok.yml \
-            -p 4040:4040 \
-            ngrok/ngrok:latest start --config /etc/ngrok.yml --all
+          # Tải và giải nén ngrok
+          wget -qO- https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip > ngrok.zip
+          unzip ngrok.zip
+          sudo mv ngrok /usr/local/bin  # Di chuyển ngrok vào thư mục bin để có thể sử dụng từ dòng lệnh
+
+      - name: Run ngrok
+        run: |
+          ngrok authtoken 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+          nohup ngrok http 80 &
 
           sleep 10
 
-          curl -s http://localhost:4040/api/tunnels | grep -o "https://[a-zA-Z0-9.-]*\.ngrok\.io" | head -n 5
+          ngrok_url=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
 
+          echo "========== Ngrok Public URL =========="
+          echo "Open this URL in your browser: $ngrok_url"
+          echo "======================================"
       - name: Keep job alive for debugging
         run: sleep 300  
  
