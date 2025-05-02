@@ -39,7 +39,6 @@ jobs:
             --name ngrok \
             -v $(pwd)/.docker/ngrok.yml:/etc/ngrok.yml \
             -p 4040:4040 \
-            --network host \
             ngrok/ngrok:latest start --config /etc/ngrok.yml --all
 
           sleep 10
