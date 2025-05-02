@@ -25,7 +25,7 @@ echo "Starting VNC server"
 # echo "x11vnc started on port 5901"
 
 # uvicorn main:app --host 0.0.0.0 --port 8000 &
-fastapi dev main.py --host 0.0.0.0 --port 8000 &
+fastapi dev main.py --host 0.0.0.0 --port 9000 &
 # echo "FastAPI started on port 8000"
 
 echo "Nginx started port 3000"
