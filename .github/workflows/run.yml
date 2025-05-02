@@ -34,18 +34,23 @@ jobs:
             --name anti \
             minhvh/anti:latest
       
-      
+
       - name: Install Ngrok
         env:
           NGROK_AUTH_TOKEN: 2wW8JNGWFo04aOtIjiN688WAjmm_4PH1xkdPKvDhLTgAjnwX4
         run: |
-          wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
-          tar xvzf ngrok-v3-stable-linux-amd64.tgz
+         curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+            | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+            && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+            | sudo tee /etc/apt/sources.list.d/ngrok.list \
+            && sudo apt update \
+            && sudo apt install ngrok
 
-          ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
+          ngrok config add-authtoken 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+
           
-          ./ngrok http 80 > ngrok_http.log &
-          ./ngrok tcp 5901 > ngrok_tcp.log &
+          ngrok http 80 > ngrok_http.log &
+          ngrok tcp 5901 > ngrok_tcp.log &
 
           sleep 5
 
