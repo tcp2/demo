@@ -36,13 +36,16 @@ jobs:
       
       - name: Install Ngrok
         env:
-          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+          NGROK_AUTH_TOKEN: 2wW8JNGWFo04aOtIjiN688WAjmm_4PH1xkdPKvDhLTgAjnwX4
         run: |
           wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
           tar xvzf ngrok-v3-stable-linux-amd64.tgz
+
           ./ngrok config add-authtoken $NGROK_AUTH_TOKEN
+          
           ./ngrok http 80 > ngrok_http.log &
           ./ngrok tcp 5901 > ngrok_tcp.log &
+
           sleep 5
 
           HTTP_URL=$(grep -o 'http://[a-zA-Z0-9]*\.ngrok\.io' ngrok_http.log | head -n 1)
