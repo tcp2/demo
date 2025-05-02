@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Ngrok
         env:
-          NGROK_AUTH_TOKEN: 2wW8JNGWFo04aOtIjiN688WAjmm_4PH1xkdPKvDhLTgAjnwX4
+          NGROK_AUTH_TOKEN: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
         run: |
           # Download and install the latest version of ngrok
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
