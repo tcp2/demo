@@ -11,28 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4      
-      - name: Install Anti
-        env:
-          SCREEN_WIDTH: 1920
-          SCREEN_HEIGHT: 1080
-          PROFILE_ID: 67eeb053a9cb6a7191579b8b
-          TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk
-        run: |
-          docker run \
-            -e SCREEN_WIDTH=$SCREEN_WIDTH \
-            -e SCREEN_HEIGHT=$SCREEN_HEIGHT \
-            -e PROFILE_ID=$PROFILE_ID \
-            -e TOKEN=$TOKEN \
-            --rm \
-            -p 9000:80 \
-            -p 8000:8000 \
-            -p 5901:5901 \
-            -p 3500:3500 \
-            -v $(pwd):/app \
-            -v $(pwd)/entrypoint.sh:/entrypoint.sh \
-            -v $(pwd)/.docker/app.conf:/etc/nginx/conf.d/app.conf \
-            --name anti \
-            minhvh/anti:latest
+      - name: Start server by running docker-compose
+        run: docker-compose up -d
+        shell: bash
 
       - name: Wait for server to be ready
         run: |
