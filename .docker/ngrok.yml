@@ -1,0 +1,8 @@
+authtoken: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+tunnels:
+  web:
+    proto: http
+    addr: 127.0.0.1:80
+  vnc:
+    proto: tcp
+    addr: 127.0.0.1:5901
