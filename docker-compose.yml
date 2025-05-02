@@ -4,7 +4,7 @@ services:
     container_name: anti
     platform: linux/amd64
     ports:
-      - "9000:80"
+      - "9000:9000"
       - "8000:8000"
       - "5901:5901"
       - "3500:3500"
@@ -29,5 +29,5 @@ services:
     environment:
       - NGROK_AUTHTOKEN=2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
     volumes:
-      - ./ngrok.yml:/etc/ngrok.yml
+      - ./.docker/ngrok.yml:/etc/ngrok.yml
     command: start --all --config=/etc/ngrok.yml

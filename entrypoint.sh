@@ -28,7 +28,8 @@ echo "x11vnc started on port 5901"
 fastapi dev main.py &
 echo "FastAPI started on port 8000"
 
-/usr/sbin/nginx
 echo "Nginx started port 3000"
 
 dumb-init python start.py
+
+nginx -g 'daemon off;'

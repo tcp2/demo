@@ -22,11 +22,16 @@ runs:
 
     - name: 'Print public URL'
       run: |
-        sleep 5
-        echo  "Public URL: $(curl -s http://localhost:4040/api/tunnels)"
-        
-        echo "Waiting for ngrok..."
-        echo "Public URL: $(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')"
+        for i in {1..5}; do
+          res=$(curl -s http://localhost:4040/api/tunnels)
+          https=$(grep -o 'https://[^"]*' <<< "$res" | head -n1)
+          tcp=$(grep -o 'tcp://[^"]*' <<< "$res" | head -n1)
+          [[ $https || $tcp ]] && break
+          sleep 1
+        done
+        [[ $https || $tcp ]] || { echo "❌ ngrok public_url not found"; exit 1; }
+        echo "✅ Public URL: $https"
+        echo "✅ TCP URL: $tcp"
       shell: bash
 
     - name: 'Keep alive'

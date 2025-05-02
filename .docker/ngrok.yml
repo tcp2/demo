@@ -1,8 +1,9 @@
-authtoken: 2QbyRGbKo6nke3jchCvGzNLRVCx_5WdiY2dfgqmbnwBUU3Bzv
+version: 2
 tunnels:
   web:
     proto: http
-    addr: 127.0.0.1:80
+    addr: anti:9000
+    inspect: true
   vnc:
     proto: tcp
-    addr: 127.0.0.1:5901
+    addr: anti:5901
