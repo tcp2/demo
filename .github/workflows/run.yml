@@ -45,13 +45,12 @@ jobs:
           ./ngrok tcp 5901 > /dev/null &
           sleep 5
 
-          HTTP_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.proto=="http") | .public_url')
-          VNC_URL=$(curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[] | select(.proto=="tcp") | .public_url')
-          
+          HTTP_URL=$(grep -o 'http://[a-zA-Z0-9]*\.ngrok\.io' ngrok_http.log | head -n 1)
+          VNC_URL=$(grep -o 'tcp://[a-zA-Z0-9]*\.ngrok\.io:[0-9]*' ngrok_tcp.log | head -n 1)
 
           echo "HTTP URL: $HTTP_URL"
           echo "VNC URL: $VNC_URL"
-          
+
       - name: Keep alive
         run: sleep 300
 
