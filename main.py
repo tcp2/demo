@@ -55,6 +55,19 @@ async def screenshot():
         return StreamingResponse(BytesIO(buf), media_type="image/png")
 
 
+@app.get("/api/automa")
+async def runAutoma():
+    async with async_playwright() as pw:
+        browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
+        ctx = browser.contexts[0]
+        page = ctx.pages[0]
+        print("Page URL:", page.url)
+        await page.goto("chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/7dmgX875oL49qe11GVfTk")
+        await page.wait_for_timeout(2000)
+        buf = await page.screenshot()
+        return StreamingResponse(BytesIO(buf), media_type="image/png")
+
+
 @app.get("/stopall")
 async def stop_all():
     subprocess.run(["pkill", "Xvfb"])
