@@ -1,3 +1,4 @@
+import asyncio
 import os
 import subprocess
 from typing import AsyncIterator
@@ -86,6 +87,8 @@ async def runAutoma():
         await p.goto(
             "chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/7dmgX875oL49qe11GVfTk"
         )
+        await asyncio.sleep(5)
+        
         buf = await p.screenshot()
         return StreamingResponse(BytesIO(buf), media_type="image/png")
 
