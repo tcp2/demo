@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import AsyncIterator
 from gologin.gologin import GoLogin
 from playwright.async_api import async_playwright
 from fastapi import FastAPI
@@ -7,6 +8,7 @@ import logging
 from fastapi.responses import StreamingResponse
 from io import BytesIO
 from playwright.async_api import Browser, Page
+from contextlib import asynccontextmanager
 
 PROFILE_ID = "67eeb053a9cb6a7191579b8b"
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk"
@@ -45,38 +47,46 @@ def start():
     return {"status": "ok"}
 
 
-async def getPage(browser: Browser) -> Page:
-    ctx = browser.contexts[0]
-    return await ctx.new_page()
+@asynccontextmanager
+async def getPage() -> AsyncIterator[Page]:
+    async with async_playwright() as pw:
+        try:
+            browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
+            ctx = browser.contexts[0]
+            p = await ctx.new_page()
+            try:
+                yield p
+            finally:
+                await p.close()
+        except Exception as e:
+            logging.error(e)
+            raise
+
+        finally:
+            if "p" in locals() and not p.is_closed():
+                await p.close()
 
 
 @app.get("/api/screenshot")
 async def screenshot():
-    async with async_playwright() as pw:
-        browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
-        page = await getPage(browser)
+    async with getPage() as p:
+        await p.goto("https://example.com")
+        logging.info("Page URL: %s", p.url)
 
-        await page.goto("https://example.com")
+        ("Page URL:", p.url)
+        await p.wait_for_timeout(2000)
+        buf = await p.screenshot()
 
-        logging.info("Page URL: %s", page.url)
-
-        ("Page URL:", page.url)
-        await page.wait_for_timeout(2000)
-        buf = await page.screenshot()
-        await page.close()
-
-        return StreamingResponse(BytesIO(buf), media_type="image/png")
+    return StreamingResponse(BytesIO(buf), media_type="image/png")
 
 
 @app.get("/api/automa")
 async def runAutoma():
-    async with async_playwright() as pw:
-        browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
-        page = await getPage(browser)
-        await page.goto(
+    async with getPage() as p:
+        await p.goto(
             "chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/7dmgX875oL49qe11GVfTk"
         )
-        buf = await page.screenshot()
+        buf = await p.screenshot()
         return StreamingResponse(BytesIO(buf), media_type="image/png")
 
 
