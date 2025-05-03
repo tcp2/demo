@@ -3,8 +3,10 @@ import subprocess
 from gologin.gologin import GoLogin
 from playwright.async_api import async_playwright
 from fastapi import FastAPI
+import logging
 from fastapi.responses import StreamingResponse
 from io import BytesIO
+from playwright.async_api import Browser, Page
 
 PROFILE_ID = "67eeb053a9cb6a7191579b8b"
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2N2VlYWJmOGJkODY2YjdjM2Y2NmIzZjEiLCJ0eXBlIjoiZGV2Iiwiand0aWQiOiI2N2VlYWMyNjcwZTM0MDBhNWY2YjdkZmUifQ.tUvpgtJL0swAUinAx1XIeWt4OQMjBqszIciDPKoE9Nk"
@@ -14,9 +16,11 @@ app = FastAPI()
 
 os.environ["DISPLAY"] = DISPLAY
 
+
 @app.get("/api/ping")
 def ping():
     return {"status": "ok"}
+
 
 @app.get("/api/start")
 def start():
@@ -29,8 +33,7 @@ def start():
             "credentials_enable_service": False,
             "port": 3500,
             "extra_params": [
-                "--remote-debugging-address=0.0.0.0"
-                "--no-sandbox",
+                "--remote-debugging-address=0.0.0.0--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
                 "--window-size=1920,1080",
@@ -42,16 +45,26 @@ def start():
     return {"status": "ok"}
 
 
+async def getPage(browser: Browser) -> Page:
+    ctx = browser.contexts[0]
+    return await ctx.new_page()
+
+
 @app.get("/api/screenshot")
 async def screenshot():
     async with async_playwright() as pw:
         browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
-        ctx = browser.contexts[0]
-        page = ctx.pages[0]
-        print("Page URL:", page.url)
+        page = await getPage(browser)
+
         await page.goto("https://example.com")
+
+        logging.info("Page URL: %s", page.url)
+
+        ("Page URL:", page.url)
         await page.wait_for_timeout(2000)
         buf = await page.screenshot()
+        await page.close()
+
         return StreamingResponse(BytesIO(buf), media_type="image/png")
 
 
@@ -59,11 +72,10 @@ async def screenshot():
 async def runAutoma():
     async with async_playwright() as pw:
         browser = await pw.chromium.connect_over_cdp("http://localhost:3500")
-        ctx = browser.contexts[0]
-        page = ctx.pages[0]
-        print("Page URL:", page.url)
-        await page.goto("chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/7dmgX875oL49qe11GVfTk")
-        await page.wait_for_timeout(2000)
+        page = await getPage(browser)
+        await page.goto(
+            "chrome-extension://ebnjojalilbeniejjakdeilkiejcjhep/execute.html#/7dmgX875oL49qe11GVfTk"
+        )
         buf = await page.screenshot()
         return StreamingResponse(BytesIO(buf), media_type="image/png")
 
