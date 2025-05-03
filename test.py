@@ -2,6 +2,7 @@ from playwright.async_api import async_playwright
 import asyncio
 
 import requests
+import websockets
 
 
 async def main():
@@ -19,5 +20,15 @@ async def main():
         # 
 
 
+async def connect_to_websocket():
+    uri = "ws://m1.laobo.xyz/devtools/browser/cc57e7e1-9c10-4371-a002-e97ec971cf56"
+    async with websockets.connect(uri) as websocket:
+        # Gửi một tin nhắn (nếu cần)
+        await websocket.send("Hello, WebSocket!")
+        
+        # Nhận phản hồi từ WebSocket
+        response = await websocket.recv()
+        print(response)
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(connect_to_websocket())
