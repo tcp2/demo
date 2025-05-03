@@ -11,15 +11,5 @@ runs:
       shell: bash
 
     - name: 'Wait for server to be ready'
-      run: |
-        while ! curl -s http://localhost:8000 > /dev/null; do
-          echo "Waiting for server..."
-          sleep 1
-        done
-        resp=$(curl http://localhost:8000/api/ping)
-        echo "Response: $resp"
-      shell: bash
-
-    - name: 'Keep alive'
-      run: sleep 1000
+      run: docker compose logs -f --tail 0
       shell: bash
