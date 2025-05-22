@@ -27,6 +27,7 @@ def start_browser():
         "--disable-dev-shm-usage",
         "--disable-gpu",
         "--window-size=1920,1080",
+        "--disable-features=UseDBus",
         "--disable-software-rasterizer",
     ]
     exts = load_extension("extension")
