@@ -1,5 +1,25 @@
 services:
+  browserless:
+    platform: linux/amd64
+    container_name: br
+    image: browserless/chrome:latest
+    environment:
+      - MAX_CONCURRENT_SESSIONS=10
+      - CONNECTION_TIMEOUT=60000
+      - MAX_QUEUE_LENGTH=20
+      - PREBOOT_CHROME=true
+      - DEMO_MODE=false
+      - HOST=0.0.0.0
+      - ENABLE_DEBUGGER=true
+      - TOKEN=1234
+      - PORT=3000
+      - WORKSPACE_DELETE_EXPIRED=true
+    restart: always
+    ports:
+      - "3001:3000"
+
   selenium-hub:
+    platform: linux/amd64
     image: selenium/hub:4.10.0
     container_name: selenium-hub
     ports:
@@ -7,20 +27,20 @@ services:
 
   selenium-node-chrome:
     image: selenium/node-chrome:4.10.0
+    platform: linux/amd64
     depends_on:
       - selenium-hub
     environment:
       - SE_EVENT_BUS_HOST=selenium-hub
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-      
+
   anti:
     image: minhvh/anti:latest
     container_name: anti
     platform: linux/amd64
     ports:
-      - "8000:80"
-      - "5901:5901"
+      - "3500:3500"
     volumes:
       - .:/app
       - ./entrypoint.sh:/entrypoint.sh
@@ -35,8 +55,6 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    depends_on:
-      - anti
     environment:
       - TUNNEL_TOKEN=eyJhIjoiYmE2MDA4YWFmN2U2YzQ4MGRjODA1N2QyYTk0ODk3NDUiLCJ0IjoiYjJkMTQwYzctMGNiNy00NjY0LThiNjctMTBmY2JhY2FlYTFlIiwicyI6Ik1qbGxNekV5TXpNdE16Wm1aaTAwTWpjeExXRTNaRGd0TldNMk9XRTNOalEwTmpSaCJ9
     command: tunnel run
